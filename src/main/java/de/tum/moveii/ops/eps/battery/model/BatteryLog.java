@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @Builder
-public class Battery {
+public class BatteryLog {
     @Id
     @SequenceGenerator(name = "battery_reg_id_seq",
             sequenceName = "battery_reg_id_seq",

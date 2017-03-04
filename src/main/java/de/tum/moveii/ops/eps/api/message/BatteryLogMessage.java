@@ -17,7 +17,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class BatteryMessage {
+public class BatteryLogMessage {
+    private Long registrationId;
     @NotNull
     private BatteryState state;
     @NotNull
