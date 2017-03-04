@@ -1,0 +1,13 @@
+# IDE
+.idea
+*.iml
+
+# Maven
+target
+
+# H2
+*.mb
+
+# Logs
+logs
+*.log
