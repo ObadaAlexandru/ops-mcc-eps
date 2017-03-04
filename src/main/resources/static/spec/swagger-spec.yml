@@ -1,277 +1,463 @@
-# this is an example of the Uber API
-# as a demonstration of an API spec in YAML
 swagger: '2.0'
 info:
-  title: Uber API
-  description: Move your app forward with the Uber API
+  title: EPS API
+  description: |
+    The **eps-api** is responsible for eps data. The service provides endpoints for
+    retrieving battery, solar panels and eps_subsystems data by the following criteria:
+      * panel / subsystem
+      * state
+      * time window
   version: "1.0.0"
-# the domain of the service
-host: api.uber.com
+
 # array of all schemes that your API supports
 schemes:
-  - https
+  - http
 # will be prefixed to all paths
-basePath: /v1
+basePath: /eps
 produces:
   - application/json
 paths:
-  /products:
-    get:
-      summary: Product Types
-      description: |
-        The Products endpoint returns information about the *Uber* products
-        offered at a given location. The response includes the display name
-        and other details about each product, and lists the products in the
-        proper display order.
+  /battery:
+    post:
+      summary: Create battery log
       parameters:
-        - name: latitude
-          in: query
-          description: Latitude component of location.
+        - name: batteryLog
+          in: body
           required: true
-          type: number
-          format: double
-        - name: longitude
-          in: query
-          description: Longitude component of location.
-          required: true
-          type: number
-          format: double
-      tags:
-        - Products
-      responses:
-        200:
-          description: An array of products
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Product'
-        default:
-          description: Unexpected error
+            $ref: '#/definitions/BatteryLog'
+      tags:
+        - Battery
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        201:
+          description: Battery log has been created
+          schema:
+            $ref: '#/definitions/BatteryLog'
+        400:
+          description: Bad request
           schema:
             $ref: '#/definitions/Error'
-  /estimates/price:
-    get:
-      summary: Price Estimates
-      description: |
-        The Price Estimates endpoint returns an estimated price range
-        for each product offered at a given location. The price estimate is
-        provided as a formatted string with the full price range and the localized
-        currency symbol.<br><br>The response also includes low and high estimates,
-        and the [ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) currency code for
-        situations requiring currency conversion. When surge is active for a particular
-        product, its surge_multiplier will be greater than 1, but the price estimate
-        already factors in this multiplier.
-      parameters:
-        - name: start_latitude
-          in: query
-          description: Latitude component of start location.
-          required: true
-          type: number
-          format: double
-        - name: start_longitude
-          in: query
-          description: Longitude component of start location.
-          required: true
-          type: number
-          format: double
-        - name: end_latitude
-          in: query
-          description: Latitude component of end location.
-          required: true
-          type: number
-          format: double
-        - name: end_longitude
-          in: query
-          description: Longitude component of end location.
-          required: true
-          type: number
-          format: double
-      tags:
-        - Estimates
-      responses:
-        200:
-          description: An array of price estimates by product
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/PriceEstimate'
-        default:
-          description: Unexpected error
+        500:
+          description: Service error
           schema:
             $ref: '#/definitions/Error'
-  /estimates/time:
+
     get:
-      summary: Time Estimates
-      description: The Time Estimates endpoint returns ETAs for all products offered at a given location, with the responses expressed as integers in seconds. We recommend that this endpoint be called every minute to provide the most accurate, up-to-date ETAs.
+      summary: Query battery log
+      description: |
+        Query battery logs by their properties
       parameters:
-        - name: start_latitude
-          in: query
-          description: Latitude component of start location.
-          required: true
-          type: number
-          format: double
-        - name: start_longitude
-          in: query
-          description: Longitude component of start location.
-          required: true
-          type: number
-          format: double
-        - name: customer_uuid
+        - name: state
           in: query
           type: string
-          format: uuid
-          description: Unique customer identifier to be used for experience customization.
-        - name: product_id
+          enum:
+            - CHARGING
+            - DISCHARGING
+          default: CHARGING
+          required: false
+        - name: since
           in: query
           type: string
-          description: Unique identifier representing a specific product for a given latitude & longitude.
+          format: date-time
+          required: false
+        - name: until
+          in: query
+          type: string
+          format: date-time
+          required: false
+        - name: pageSize
+          in: query
+          type: integer
+          required: false
+          default: 50
+          description: |
+            The results will be provided in chunks. This parameters represents the chunk size
+        - name: pageIndex
+          in: query
+          type: integer
+          required: false
+          default: 1
       tags:
-        - Estimates
+        - Battery
+      produces:
+        - application/json
       responses:
         200:
-          description: An array of products
+          description: |
+            A list of battery logs which fulfill the requirements
           schema:
             type: array
             items:
-              $ref: '#/definitions/Product'
-        default:
-          description: Unexpected error
+                $ref: '#/definitions/BatteryLog'
+        400:
+          description: Bad request
           schema:
             $ref: '#/definitions/Error'
-  /me:
+        500:
+          description: Service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /battery/{registrationId}:
     get:
-      summary: User Profile
-      description: The User Profile endpoint returns information about the Uber user that has authorized with the application.
+      summary: Single battery log
+      description: Retrieve a battery log by id
+      parameters:
+        - name: registrationId
+          in: path
+          type: string
+          description: Battery log identifier
+          required: true
       tags:
-        - User
+        - Battery
+      produces:
+        - application/json
       responses:
         200:
-          description: Profile information for a user
+          description: Battery log
           schema:
-            $ref: '#/definitions/Profile'
-        default:
-          description: Unexpected error
+            $ref: '#/definitions/BatteryLog'
+        400:
+          description: Bad request
           schema:
             $ref: '#/definitions/Error'
-  /history:
-    get:
-      summary: User Activity
-      description: The User Activity endpoint returns data about a user's lifetime activity with Uber. The response will include pickup locations and times, dropoff locations and times, the distance of past requests, and information about which products were requested.<br><br>The history array in the response will have a maximum length based on the limit parameter. The response value count may exceed limit, therefore subsequent API requests may be necessary.
+        404:
+          description: Not found
+          schema:
+            type: string
+        500:
+          description: Service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /panels:
+    post:
+      summary: Create panel log
       parameters:
-        - name: offset
+        - name: panelLog
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PanelLog'
+      tags:
+        - Panels
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        201:
+          description: Panel log has been created
+          schema:
+            $ref: '#/definitions/PanelLog'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Service error
+          schema:
+            $ref: '#/definitions/Error'
+
+    get:
+      summary: Query panel logs
+      description: |
+        Query panel logs by their properties
+      parameters:
+        - name: panelId
           in: query
           type: integer
           format: int32
-          description: Offset the list of returned results by this amount. Default is zero.
-        - name: limit
+          description: panel id
+          required: false
+        - name: state
+          in: query
+          type: string
+          enum:
+            - NORMAL
+            - WARNING
+          default: NORMAL
+          required: false
+        - name: since
+          in: query
+          type: string
+          format: date-time
+          required: false
+        - name: until
+          in: query
+          type: string
+          format: date-time
+          required: false
+        - name: pageSize
+          in: query
+          type: integer
+          required: false
+          default: 50
+          description: |
+            The results will be provided in chunks. This parameters represents the chunk size
+        - name: pageIndex
+          in: query
+          type: integer
+          required: false
+          default: 1
+      tags:
+        - Panels
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Panels
+          schema:
+            type: array
+            items:
+                $ref: '#/definitions/PanelLog'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Service error
+          schema:
+            $ref: '#/definitions/Error'
+  
+  /panels/{registrationId}:
+    get:
+      summary: Single panel log
+      description: Retrieve a panel log by id
+      parameters:
+        - name: registrationId
+          in: path
+          type: string
+          description: Battery log identifier
+          required: true
+      tags:
+        - Panels
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Panel log
+          schema:
+            $ref: '#/definitions/PanelLog'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: Not found
+          schema:
+            type: string
+        500:
+          description: Service error
+          schema:
+            $ref: '#/definitions/Error'
+            
+  /subsystems:
+    post:
+      summary: Create subsystem log
+      parameters:
+        - name: SubsystemLog
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/SubsystemLog'
+      tags:
+        - Subsystems
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        201:
+          description: Subsystem log has been created
+          schema:
+            $ref: '#/definitions/SubsystemLog'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Service error
+          schema:
+            $ref: '#/definitions/Error'
+
+    get:
+      summary: Query subsystem log
+      description: |
+        Query battery logs by their properties
+      parameters:
+        - name: subsystemId
           in: query
           type: integer
           format: int32
-          description: Number of items to retrieve. Default is 5, maximum is 100.
+        - name: state
+          in: query
+          type: string
+          enum:
+            - ON
+            - OFF
+          default: ON
+          required: false
+        - name: expectedState
+          in: query
+          type: string
+          enum:
+            - ON
+            - OFF
+          default: ON
+          required: false
+        - name: since
+          in: query
+          type: string
+          format: date-time
+          required: false
+        - name: until
+          in: query
+          type: string
+          format: date-time
+          required: false
+        - name: pageSize
+          in: query
+          type: integer
+          required: false
+          default: 50
+          description: |
+            The results will be provided in chunks. This parameters represents the chunk size
+        - name: pageIndex
+          in: query
+          type: integer
+          required: false
+          default: 1
       tags:
-        - User
+        - Subsystems
+      produces:
+        - application/json
       responses:
         200:
-          description: History information for the given user
+          description: |
+            A list of subsystem logs which fulfill the requirements
           schema:
-            $ref: '#/definitions/Activities'
-        default:
-          description: Unexpected error
+            type: array
+            items:
+                $ref: '#/definitions/SubsystemLog'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /subsystems/{registrationId}:
+    get:
+      summary: Single subsystem log
+      description: Retrieve a subsystem log by id
+      parameters:
+        - name: registrationId
+          in: path
+          type: string
+          description: Subsystem log identifier
+          required: true
+      tags:
+        - Subsystems
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Subsystem log
+          schema:
+            $ref: '#/definitions/SubsystemLog'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: Not found
+          schema:
+            type: string
+        500:
+          description: Service error
           schema:
             $ref: '#/definitions/Error'
 definitions:
-  Product:
+  BatteryLog:
     type: object
     properties:
-      product_id:
+      registrationId:
+        type: integer
+        format: int64
+      state:
         type: string
-        description: Unique identifier representing a specific product for a given latitude & longitude. For example, uberX in San Francisco will have a different product_id than uberX in Los Angeles.
-      description:
-        type: string
-        description: Description of product.
-      display_name:
-        type: string
-        description: Display name of product.
-      capacity:
-        type: string
-        description: Capacity of product. For example, 4 people.
-      image:
-        type: string
-        description: Image URL representing the product.
-  PriceEstimate:
-    type: object
-    properties:
-      product_id:
-        type: string
-        description: Unique identifier representing a specific product for a given latitude & longitude. For example, uberX in San Francisco will have a different product_id than uberX in Los Angeles
-      currency_code:
-        type: string
-        description: "[ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) currency code."
-      display_name:
-        type: string
-        description: Display name of product.
-      estimate:
-        type: string
-        description: Formatted string of estimate in local currency of the start location. Estimate could be a range, a single number (flat rate) or "Metered" for TAXI.
-      low_estimate:
-        type: number
-        description: Lower bound of the estimated price.
-      high_estimate:
-        type: number
-        description: Upper bound of the estimated price.
-      surge_multiplier:
-        type: number
-        description: Expected surge multiplier. Surge is active if surge_multiplier is greater than 1. Price estimate already factors in the surge multiplier.
-  Profile:
-    type: object
-    properties:
-      first_name:
-        type: string
-        description: First name of the Uber user.
-      last_name:
-        type: string
-        description: Last name of the Uber user.
-      email:
-        type: string
-        description: Email address of the Uber user
-      picture:
-        type: string
-        description: Image URL of the Uber user.
-      promo_code:
-        type: string
-        description: Promo code of the Uber user.
-  Activity:
-    type: object
-    properties:
-      uuid:
-        type: string
-        description: Unique identifier for the activity
-  Activities:
-    type: object
-    properties:
-      offset:
+        enum:
+          - CHARGING
+          - DISCHARGING
+      level:
         type: integer
         format: int32
-        description: Position in pagination.
-      limit:
+      createdOn:
+        type: string
+        format: date-time
+  
+  PanelLog:
+    type: object
+    properties:
+      registrationId:
+        type: integer
+        format: int64
+      panelId:
         type: integer
         format: int32
-        description: Number of items to retrieve (100 max).
-      count:
+      state:
+        type: string
+        enum:
+          - NORMAL
+          - WARNING
+      current:
+        type: number
+        format: double
+      voltage:
+        type: number
+        format: double
+      createdOn:
+        type: string
+        format: date-time
+        
+  SubsystemLog:
+    type: object
+    properties:
+      registrationId:
+        type: integer
+        format: int64
+      subsystemId:
         type: integer
         format: int32
-        description: Total number of items available.
-      history:
-        type: array
-        items:
-          $ref: '#/definitions/Activity'
+      state:
+        type: string
+        enum:
+          - ON
+          - OFF
+      expectedState:
+        type: string
+        enum:
+          - ON
+          - OFF
+      current:
+        type: number
+        format: double
+      voltage:
+        type: number
+        format: double
+      createdOn:
+        type: string
+        format: date-time
+
   Error:
     type: object
     properties:
-      code:
-        type: integer
-        format: int32
       message:
-        type: string
-      fields:
         type: string
