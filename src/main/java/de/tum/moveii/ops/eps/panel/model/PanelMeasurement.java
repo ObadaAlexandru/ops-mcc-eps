@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @Builder
-public class Panel {
+public class PanelMeasurement {
     @Id
     @SequenceGenerator(name = "panels_reg_id_seq",
             sequenceName = "panels_reg_id_seq",

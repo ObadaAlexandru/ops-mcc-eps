@@ -1,17 +1,17 @@
 package de.tum.moveii.ops.eps.api.mapper;
 
-import de.tum.moveii.ops.eps.api.message.BatteryLogMessage;
-import de.tum.moveii.ops.eps.battery.model.BatteryLog;
+import de.tum.moveii.ops.eps.api.message.BatteryMessage;
+import de.tum.moveii.ops.eps.battery.model.BatteryMeasurement;
 import org.springframework.stereotype.Component;
 
 /**
  * Created by Constantin Costescu on 04-Mar-17.
  */
 @Component
-public class BatteryMapper implements ResourceMapper<BatteryLogMessage, BatteryLog> {
+public class BatteryMapper implements ResourceMapper<BatteryMessage, BatteryMeasurement> {
     @Override
-    public BatteryLog toResource(BatteryLogMessage message) {
-        return BatteryLog.builder()
+    public BatteryMeasurement toResource(BatteryMessage message) {
+        return BatteryMeasurement.builder()
                 .state(message.getState())
                 .level(message.getLevel())
                 .createdOn(message.getCreatedOn())
@@ -19,8 +19,8 @@ public class BatteryMapper implements ResourceMapper<BatteryLogMessage, BatteryL
     }
 
     @Override
-    public BatteryLogMessage toMessage(BatteryLog resource) {
-        return BatteryLogMessage.builder()
+    public BatteryMessage toMessage(BatteryMeasurement resource) {
+        return BatteryMessage.builder()
                 .state(resource.getState())
                 .level(resource.getLevel())
                 .createdOn(resource.getCreatedOn())

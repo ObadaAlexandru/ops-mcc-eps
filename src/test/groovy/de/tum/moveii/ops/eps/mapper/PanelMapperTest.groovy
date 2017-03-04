@@ -2,7 +2,8 @@ package de.tum.moveii.ops.eps.mapper
 
 import de.tum.moveii.ops.eps.api.mapper.PanelMapper
 import de.tum.moveii.ops.eps.api.message.PanelMessage
-import de.tum.moveii.ops.eps.panel.model.Panel
+import de.tum.moveii.ops.eps.panel.model.PanelMeasurement
+import de.tum.moveii.ops.eps.panel.model.PanelMeasurement
 import de.tum.moveii.ops.eps.panel.model.PanelState
 import spock.lang.Specification
 
@@ -17,7 +18,7 @@ class PanelMapperTest extends Specification {
     def 'Map panel to panelMessage'() {
         given:
 
-        def panel = Panel.builder()
+        def panel = PanelMeasurement.builder()
                 .panelId(1)
                 .state(PanelState.NORMAL)
                 .current(5.2)
@@ -42,7 +43,7 @@ class PanelMapperTest extends Specification {
 
     def 'Map panelMessage to panel'() {
         given:
-        def panel = Panel.builder()
+        def panel = PanelMeasurement.builder()
                 .panelId(1)
                 .state(PanelState.NORMAL)
                 .current(5.2)

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * Created by Alexandru Obada on 05/03/17.
  */
 @Data
-public class BatteryLogProperties {
+public class BatteryProperties {
     private BatteryState state;
     private Integer pageSize = 50;
     private Integer pageIndex = 0;

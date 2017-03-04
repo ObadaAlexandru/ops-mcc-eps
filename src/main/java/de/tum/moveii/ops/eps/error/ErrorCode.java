@@ -13,7 +13,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ErrorCode {
-    BATTERY_LOG_NOT_FOUND("EPS-001", "Alert not found");
+    BATTERY_LOG_NOT_FOUND("EPS-001", "Battery measurement not found"),
+    PANEL_MEASUREMENT_NOT_FOUND("EPS-002", "Panel measurement not found");
 
     private String code;
     private String defaultMessage;
