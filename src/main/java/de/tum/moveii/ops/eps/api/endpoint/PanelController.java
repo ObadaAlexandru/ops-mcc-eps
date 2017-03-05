@@ -8,7 +8,11 @@ import de.tum.moveii.ops.eps.panel.model.PanelMeasurement;
 import de.tum.moveii.ops.eps.panel.service.PanelService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -44,6 +48,14 @@ public class PanelController {
         return panelService.getPanelMeasurement(registrationId)
                 .map(panelMapper::toMessage)
                 .orElseThrow(() -> new PanelMeasurementNotFound(String.format("Panel measurement <%s> not found", registrationId)));
+    }
+
+    @ResponseStatus(OK)
+    @GetMapping(produces = APPLICATION_JSON_VALUE)
+    public List<PanelMessage> getMeasurements(PanelProperties panelProperties) {
+        List<PanelMeasurement> measurements = panelService.getPanelMeasurements(panelProperties.buildPredicate(),
+                new PageRequest(panelProperties.getPageSize(), panelProperties.getPageIndex()));
+        return measurements.stream().map(panelMapper::toMessage).collect(Collectors.toList());
     }
 
     @ResponseStatus(NOT_FOUND)
